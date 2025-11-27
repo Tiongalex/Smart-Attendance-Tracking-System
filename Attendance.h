@@ -16,7 +16,7 @@ private:
     vector<string> time;
 public:
     Attendance();
-    Attendance(string attendanceID, string staffID, vector<Student> student, vector<string> attendanceStatus, vector<string> date, vector<string> tume);
+    Attendance(string attendanceID, string staffID, vector<Student> student, vector<string> attendanceStatus, vector<string> date, vector<string> time);
     
     string getAttendanceID();
 
