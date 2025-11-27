@@ -6,7 +6,7 @@ using namespace std;
 
 Attendance::Attendance() {}
 
-Attendance::Attendance(string attendanceID, string staffID, vector<Student> student, vector<string> attendanceStatus, vector<string> date, vector<string> tume):
+Attendance::Attendance(string attendanceID, string staffID, vector<Student> student, vector<string> attendanceStatus, vector<string> date, vector<string> time):
 attendanceID(attendanceID), staffID(staffID), student(student), attendanceStatus(attendanceStatus), date(date), time(time) {}
 
 string Attendance::getAttendanceID(){
