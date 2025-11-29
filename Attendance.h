@@ -18,13 +18,14 @@ public:
     Attendance();
     Attendance(string attendanceID, string staffID, vector<Student> student, vector<string> attendanceStatus, vector<string> date, vector<string> time);
     
-    string getAttendanceID();
+    string getStaffID() const ;
+    string getAttendanceID() const ;
 
-    vector<Student> getStudent();
+    vector<Student> getStudent() const;
 
-    vector<string> getAttendanceStatus();
-    vector<string> getDate();
-    vector<string> getTime();
+    vector<string> getAttendanceStatus() const;
+    vector<string> getDate() const;
+    vector<string> getTime() const;
 
     void setAttendanceStatus(string stuID, string attendance);
     void setDate(string stuID, string date);

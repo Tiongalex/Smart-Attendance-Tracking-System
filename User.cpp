@@ -9,16 +9,16 @@ User::User(string id, string name, string role){
     this->role=role;
 }
 
-string User::getID(){
+string User::getID() const {
     return this->id;
 }
 
-string User::getName(){
+string User::getName() const {
     return this->name;
 }
 
-string User::getRole(){
-    return this->role;
+string User::getRole() const {
+    return this->role;  
 }
 
 void User::setID(string id){

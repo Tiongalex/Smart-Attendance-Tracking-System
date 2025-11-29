@@ -25,30 +25,35 @@ void Staff::createAttendance(){
 
 }
 
-void Staff::viewAttendance(){
-     vector<Attendance> attendances;
+void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
+    cout << "\n--- Staff View: " << this->getName() << " ---" << endl;
     
-    // In real implementation, you would load attendances from database/file
-    // attendances = loadAttendancesForStaff(this->getID());
-    
-    if (attendances.empty()) {
-        cout << "No attendance records found." << endl;
+    vector<Attendance> records;
+    for(const auto& rec : inputAttendances){
+        if(rec.getStaffID() == this->getID()){
+            records.push_back(rec);
+        }
+    }
+
+
+    if (records.empty()) {
+        cout << "No attendance records found for you Staff ID." << endl;
         return;
     }
-    
-    // Sort attendances by date using merge sort
-    mergeSort(attendances, 0, attendances.size() - 1, true);
+
+    mergeSort(records, 0, records.size() - 1, true);
     
     cout << "Attendance Records (Sorted by Date):" << endl;
     cout << "=====================================" << endl;
     
-    for (const auto& attendance : attendances) {
-        cout << "Attendance ID: " << attendance.getAttendanceID() << endl;
-        vector<string> dates = attendance.getDate();
-        if (!dates.empty()) {
-            cout << "Date: " << dates[0] << endl; // Using first date
-        }
-        cout << "-------------------------" << endl;
+    for (const auto& rec : records) {
+        string d = rec.getDate().empty() ? "N/A" : rec.getDate()[0];
+        string t = rec.getTime().empty() ? "N/A" : rec.getTime()[0];
+        string sName = rec.getStudent().empty() ? "Unknown" : rec.getStudent()[0].getName();
+        string status = rec.getAttendanceStatus().empty() ? "N/A" : rec.getAttendanceStatus()[0];
+
+        cout << "[" << d << " " << t << "] ID: " << rec.getAttendanceID() 
+             << " | " << sName << " (" << status << ")" << endl;
     }
     
     // Binary search example - search for specific attendance by date
@@ -56,11 +61,11 @@ void Staff::viewAttendance(){
     cout << "\nEnter date to search (YYYY-MM-DD): ";
     cin >> searchDate;
     
-    int foundIndex = binarySearch(attendances, searchDate, true);
+    int foundIndex = binarySearch(records, searchDate, true);
     
     if (foundIndex != -1) {
         cout << "Attendance found at index " << foundIndex << ":" << endl;
-        Attendance found = attendances[foundIndex];
+        Attendance found = records[foundIndex];
         cout << "Attendance ID: " << found.getAttendanceID() << endl;
         
         vector<Student> students = found.getStudent();

@@ -9,23 +9,27 @@ Attendance::Attendance() {}
 Attendance::Attendance(string attendanceID, string staffID, vector<Student> student, vector<string> attendanceStatus, vector<string> date, vector<string> time):
 attendanceID(attendanceID), staffID(staffID), student(student), attendanceStatus(attendanceStatus), date(date), time(time) {}
 
-string Attendance::getAttendanceID(){
+string Attendance::getStaffID() const {
+    return this->staffID;
+}
+
+string Attendance::getAttendanceID() const {
     return this->attendanceID;
 }
 
-vector<Student> Attendance::getStudent(){
+vector<Student> Attendance::getStudent() const {
     return this->student;
 }
 
-vector<string> Attendance::getAttendanceStatus(){
+vector<string> Attendance::getAttendanceStatus() const{
     return this->attendanceStatus;
 }
 
-vector<string> Attendance::getDate(){
+vector<string> Attendance::getDate() const{
     return this->date;
 }
 
-vector<string> Attendance::getTime(){
+vector<string> Attendance::getTime() const{
     return this->time;
 }
 
