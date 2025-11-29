@@ -7,7 +7,76 @@ using namespace std;
 
 void mergeSort(vector<Attendance>& attendances, int left, int right, bool sortByDate = true);
 void merge(vector<Attendance>& attendances, int left, int mid, int right, bool sortByDate);
-int binarySearch(const vector<Attendance>& attendances, const string& key, bool searchByDate = true);
+
+vector<Attendance> filterByDate(const vector<Attendance>& records, string targetDate) {
+    vector<Attendance> matchingRecords;
+    for (const auto& record : records) {
+        if (!record.getDate().empty()) {
+            if (record.getDate()[0] == targetDate) {
+                matchingRecords.push_back(record);
+            }
+        }
+    }
+    return matchingRecords;
+}
+
+vector<Attendance> filterByAttendanceID(const vector<Attendance>& records, string targetID) {
+    vector<Attendance> matchingRecords;
+    for (const auto& record : records) {
+        if (record.getAttendanceID() == targetID) {
+            matchingRecords.push_back(record);
+        }
+    }
+    return matchingRecords;
+}
+
+vector<Attendance> filterByStaffID(const vector<Attendance>& records, string targetStaffID) {
+    vector<Attendance> matchingRecords;
+    for (const auto& record : records) {
+        if (record.getStaffID() == targetStaffID) {
+            matchingRecords.push_back(record);
+        }
+    }
+    return matchingRecords;
+}
+
+vector<Attendance> filterByStudentID(const vector<Attendance>& records, string targetStudentID) {
+    vector<Attendance> matchingRecords;
+    for (const auto& record : records) {
+        vector<Student> students = record.getStudent();
+        bool found = false;
+        for (const auto& s : students) {
+            if (s.getID() == targetStudentID) {
+                found = true;
+                break;
+            }
+        }
+        
+        if (found) {
+            matchingRecords.push_back(record);
+        }
+    }
+    return matchingRecords;
+}
+
+vector<Attendance> filterByStatus(const vector<Attendance>& records, string targetStatus) {
+    vector<Attendance> matchingRecords;
+    for (const auto& record : records) {
+        vector<string> statuses = record.getAttendanceStatus();
+        bool found = false;
+        for (const auto& s : statuses) {
+            if (s == targetStatus) {
+                found = true;
+                break;
+            }
+        }
+        
+        if (found) {
+            matchingRecords.push_back(record);
+        }
+    }
+    return matchingRecords;
+}
 
 Staff::Staff(string id, string name, string role, string faculty): User(id, name, role) {
     this->faculty=faculty;
@@ -56,34 +125,70 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
              << " | " << sName << " (" << status << ")" << endl;
     }
     
-    // Binary search example - search for specific attendance by date
-    string searchDate;
-    cout << "\nEnter date to search (YYYY-MM-DD): ";
-    cin >> searchDate;
-    
-    int foundIndex = binarySearch(records, searchDate, true);
-    
-    if (foundIndex != -1) {
-        cout << "Attendance found at index " << foundIndex << ":" << endl;
-        Attendance found = records[foundIndex];
-        cout << "Attendance ID: " << found.getAttendanceID() << endl;
-        
-        vector<Student> students = found.getStudent();
-        vector<string> status = found.getAttendanceStatus();
-        vector<string> dates = found.getDate();
-        vector<string> times = found.getTime();
-        
-        cout << "Student Attendance Details:" << endl;
-        for (size_t i = 0; i < students.size() && i < status.size(); i++) {
-            cout << "Student: " << students[i].getName() 
-                 << " | Status: " << status[i];
-            if (i < dates.size()) cout << " | Date: " << dates[i];
-            if (i < times.size()) cout << " | Time: " << times[i];
-            cout << endl;
-        }
+    int choice;
+    string searchKey;
+    vector<Attendance> results;
+
+    cout << "Total Records Found: " << records.size() << endl;
+    cout << "\n[ Filter Options ]" << endl;
+    cout << "1. Show All Records" << endl;
+    cout << "2. Filter by Date (YYYY-MM-DD)" << endl;
+    cout << "3. Filter by Attendance ID" << endl;
+    cout << "4. Filter by Student ID" << endl;
+    cout << "5. Filter by Status (Present/Absent)" << endl;
+    cout << "Enter choice: ";
+    cin >> choice;
+
+    switch (choice) {
+        case 1:
+            results = records; 
+            break;
+        case 2:
+            cout << "Enter Date: ";
+            cin >> searchKey;
+            results = filterByDate(records, searchKey);
+            break;
+        case 3:
+            cout << "Enter Attendance ID: ";
+            cin >> searchKey;
+            results = filterByAttendanceID(records, searchKey);
+            break;
+        case 4:
+            cout << "Enter Student ID: ";
+            cin >> searchKey;
+            results = filterByStudentID(records, searchKey);
+            break;
+        case 5:
+            cout << "Enter Status: ";
+            cin >> searchKey;
+            results = filterByStatus(records, searchKey);
+            break;
+        default:
+            cout << "Invalid choice. Showing all records." << endl;
+            results = records;
+            break;
+    }
+
+    cout << "\n[ Results ]" << endl;
+    if (results.empty()) {
+        cout << "No records found matching criteria." << endl;
     } else {
-        cout << "No attendance record found for date: " << searchDate << endl;
-    }   
+        cout << "----------------------------------------------------------------" << endl;
+        cout << "Date       | Time     | AttID  | Student Name         | Status" << endl;
+        cout << "----------------------------------------------------------------" << endl;
+        
+        for (const auto& rec : results) {
+            string d = rec.getDate().empty() ? "N/A" : rec.getDate()[0];
+            string t = rec.getTime().empty() ? "N/A" : rec.getTime()[0];
+            string status = rec.getAttendanceStatus().empty() ? "N/A" : rec.getAttendanceStatus()[0];
+            string sName = rec.getStudent().empty() ? "Unknown" : rec.getStudent()[0].getName();
+            
+            cout << d << " | " << t << " | " << rec.getAttendanceID() 
+                 << " | " << sName << " | " << status << endl;
+        }
+        cout << "----------------------------------------------------------------" << endl;
+        cout << "Total displayed: " << results.size() << endl;
+    }
 }
 
 void Staff::exportSummary(string attendanceID){
@@ -140,31 +245,4 @@ void merge(vector<Attendance>& attendances, int left, int mid, int right, bool s
         j++;
         k++;
     }
-}
-
-int binarySearch(const vector<Attendance>& attendances, const string& key, bool searchByDate) {
-    int left = 0;
-    int right = attendances.size() - 1;
-    
-    while (left <= right) {
-        int mid = left + (right - left) / 2;
-        
-        string currentValue;
-        if (searchByDate) {
-            vector<string> dates = attendances[mid].getDate();
-            currentValue = dates.empty() ? "" : dates[0];
-        } else {
-            currentValue = attendances[mid].getAttendanceID();
-        }
-        
-        if (currentValue == key) {
-            return mid; // Found
-        } else if (currentValue < key) {
-            left = mid + 1;
-        } else {
-            right = mid - 1;
-        }
-    }
-    
-    return -1; // Not found
 }
