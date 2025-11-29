@@ -7,6 +7,7 @@ class Student : public User {
 private:
     string course;
 public:
+    Student();
     Student(string id, string name, string role, string course);
 
     string getCourse();

@@ -2,6 +2,8 @@
 #include <iostream>
 using namespace std;
 
+Student::Student() {}
+
 Student::Student(string id, string name, string role, string course): User(id, name, role) {
     this->course=course;
 }

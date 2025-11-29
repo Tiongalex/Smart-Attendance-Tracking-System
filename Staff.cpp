@@ -3,19 +3,22 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <string>
 using namespace std;
 
-void mergeSort(vector<Attendance>& attendances, int left, int right, bool sortByDate = true);
+int partition(vector<Attendance>& arr, int low, int high);
+void quickSort(vector<Attendance>& arr, int low, int high);
+void mergeSort(vector<Attendance>& attendances, int left, int right, bool sortByDate);
 void merge(vector<Attendance>& attendances, int left, int mid, int right, bool sortByDate);
 
 vector<Attendance> filterByDate(const vector<Attendance>& records, string targetDate) {
     vector<Attendance> matchingRecords;
     for (const auto& record : records) {
-        if (!record.getDate().empty()) {
-            if (record.getDate()[0] == targetDate) {
+            if (record.getDate() == targetDate) {
                 matchingRecords.push_back(record);
             }
-        }
     }
     return matchingRecords;
 }
@@ -43,16 +46,7 @@ vector<Attendance> filterByStaffID(const vector<Attendance>& records, string tar
 vector<Attendance> filterByStudentID(const vector<Attendance>& records, string targetStudentID) {
     vector<Attendance> matchingRecords;
     for (const auto& record : records) {
-        vector<Student> students = record.getStudent();
-        bool found = false;
-        for (const auto& s : students) {
-            if (s.getID() == targetStudentID) {
-                found = true;
-                break;
-            }
-        }
-        
-        if (found) {
+        if(record.getStudent().getID() == targetStudentID){
             matchingRecords.push_back(record);
         }
     }
@@ -62,16 +56,7 @@ vector<Attendance> filterByStudentID(const vector<Attendance>& records, string t
 vector<Attendance> filterByStatus(const vector<Attendance>& records, string targetStatus) {
     vector<Attendance> matchingRecords;
     for (const auto& record : records) {
-        vector<string> statuses = record.getAttendanceStatus();
-        bool found = false;
-        for (const auto& s : statuses) {
-            if (s == targetStatus) {
-                found = true;
-                break;
-            }
-        }
-        
-        if (found) {
+        if (record.getAttendanceStatus() == targetStatus) {
             matchingRecords.push_back(record);
         }
     }
@@ -116,10 +101,10 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
     cout << "=====================================" << endl;
     
     for (const auto& rec : records) {
-        string d = rec.getDate().empty() ? "N/A" : rec.getDate()[0];
-        string t = rec.getTime().empty() ? "N/A" : rec.getTime()[0];
-        string sName = rec.getStudent().empty() ? "Unknown" : rec.getStudent()[0].getName();
-        string status = rec.getAttendanceStatus().empty() ? "N/A" : rec.getAttendanceStatus()[0];
+        string d = rec.getDate();
+        string t = rec.getTime();
+        string sName = rec.getStudent().getName();
+        string status = rec.getAttendanceStatus();
 
         cout << "[" << d << " " << t << "] ID: " << rec.getAttendanceID() 
              << " | " << sName << " (" << status << ")" << endl;
@@ -178,10 +163,10 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
         cout << "----------------------------------------------------------------" << endl;
         
         for (const auto& rec : results) {
-            string d = rec.getDate().empty() ? "N/A" : rec.getDate()[0];
-            string t = rec.getTime().empty() ? "N/A" : rec.getTime()[0];
-            string status = rec.getAttendanceStatus().empty() ? "N/A" : rec.getAttendanceStatus()[0];
-            string sName = rec.getStudent().empty() ? "Unknown" : rec.getStudent()[0].getName();
+            string d = rec.getDate();
+            string t = rec.getTime();
+            string status = rec.getAttendanceStatus();
+            string sName = rec.getStudent().getName();
             
             cout << d << " | " << t << " | " << rec.getAttendanceID() 
                  << " | " << sName << " | " << status << endl;
@@ -191,8 +176,53 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
     }
 }
 
-void Staff::exportSummary(string attendanceID){
+void Staff::exportSummary(const vector<Attendance>& records, string attendanceID){
+    cout << "   Generating Summary for Session: " << attendanceID << endl;
 
+    vector<Attendance> sessionRecords = filterByAttendanceID(records, attendanceID);
+    if (sessionRecords.empty()) {
+        cout << "[Error] No records found for Attendance ID: " << attendanceID << endl;
+        return;
+    }
+    quickSort(sessionRecords, 0, sessionRecords.size() - 1);
+    int total = sessionRecords.size();
+    int present = 0, absent = 0, late = 0;
+
+    for (const auto& rec : sessionRecords) {
+        string status = rec.getAttendanceStatus();
+        if (status == "Present") present++;
+        else if (status == "Absent") absent++;
+        else if (status == "Late") late++;
+    }
+
+    string filename = "Summary_" + attendanceID + ".txt";
+    ofstream outFile(filename);
+
+    if (outFile.is_open()) {
+        outFile << "Attendance Summary Report\n";
+        outFile << "========================================\n";
+        outFile << "Session ID   : " << attendanceID << "\n";
+        outFile << "Lecturer     : " << this->getName() << "\n";
+        outFile << "Total Students: " << total << "\n";
+        outFile << "Stats        : Present: " << present << " | Absent: " << absent << " | Late: " << late << "\n";
+        outFile << "========================================\n";
+        outFile << left << setw(25) << "Student Name" << setw(15) << "Student ID" << "Status\n";
+        outFile << "--------------------------------------------------\n";
+
+        for (const auto& rec : sessionRecords) {
+            string name = rec.getStudent().getName();
+            string id = rec.getStudent().getID();
+            string status = rec.getAttendanceStatus();
+            outFile << left << setw(25) << name << setw(15) << id << status << "\n";
+        }
+        outFile.close();
+
+        cout << "Summary generated successfully!" << endl;
+        cout << "Filename: " << filename << endl;
+        cout << "Stats: Present(" << present << "), Absent(" << absent << "), Late(" << late << ")" << endl;
+    } else {
+        cout << "[Error] Unable to create file " << filename << endl;
+    }
 }
 
 void mergeSort(vector<Attendance>& attendances, int left, int right, bool sortByDate) {
@@ -211,18 +241,16 @@ void merge(vector<Attendance>& attendances, int left, int mid, int right, bool s
     vector<Attendance> L(n1);
     vector<Attendance> R(n2);
 
-    for (int i = 0; i < n1; i++)
-        L[i] = attendances[left + i];
-    for (int j = 0; j < n2; j++)
-        R[j] = attendances[mid + 1 + j];
+    for (int i = 0; i < n1; i++) L[i] = attendances[left + i];
+    for (int j = 0; j < n2; j++) R[j] = attendances[mid + 1 + j];
 
     int i = 0;
     int j = 0;
     int k = left;
 
     while (i < n1 && j < n2) {
-        string dateL = L[i].getDate().empty() ? "" : L[i].getDate()[0];
-        string dateR = R[j].getDate().empty() ? "" : R[j].getDate()[0];
+        string dateL = L[i].getDate();
+        string dateR = R[j].getDate();
 
         if ((sortByDate && dateL <= dateR) || (!sortByDate && dateL >= dateR)) {
             attendances[k] = L[i];
@@ -234,15 +262,35 @@ void merge(vector<Attendance>& attendances, int left, int mid, int right, bool s
         k++;
     }
 
-    while (i < n1) {
-        attendances[k] = L[i];
-        i++;
-        k++;
-    }
+    while (i < n1) { attendances[k] = L[i]; i++; k++; }
 
-    while (j < n2) {
-        attendances[k] = R[j];
-        j++;
-        k++;
+    while (j < n2) { attendances[k] = R[j]; j++; k++; }
+}
+
+int partition(vector<Attendance>& arr, int low, int high){
+    int loop, cutPoint, bottom, top;
+    string pivot = arr[low].getStudent().getName();
+    bottom = low;
+    top = high;
+
+    while(loop){
+        while (arr[top].getStudent().getName()>pivot)
+            top--;
+        while (arr[bottom].getStudent().getName() < pivot)
+            bottom++;
+
+        if (bottom < top) swap(arr[bottom], arr[top]);
+        else{
+            loop = 0;
+            cutPoint = top;
+        }
+    }
+    return cutPoint;
+}
+void quickSort(vector<Attendance>& arr, int low, int high){
+    if (low < high) {
+        int cut = partition(arr, low, high);
+        quickSort(arr, low, cut);
+        quickSort(arr, cut+1, high);
     }
 }

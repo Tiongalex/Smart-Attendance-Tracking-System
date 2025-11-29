@@ -9,27 +9,26 @@ using namespace std;
 class Attendance{
 private:
     string attendanceID;
-    string staffID; // Determine which staff yg create the attendance entity
-    vector<Student> student;
-    vector<string> attendanceStatus;
-    vector<string> date;
-    vector<string> time;
+    string staffID;
+    Student student;
+    string attendanceStatus;
+    string date;
+    string time;
 public:
     Attendance();
-    Attendance(string attendanceID, string staffID, vector<Student> student, vector<string> attendanceStatus, vector<string> date, vector<string> time);
+    Attendance(string attendanceID, string staffID, Student student, string attendanceStatus, string date, string time);
     
     string getStaffID() const ;
     string getAttendanceID() const ;
 
-    vector<Student> getStudent() const;
+    Student getStudent() const;
+    string getAttendanceStatus() const;
+    string getDate() const;
+    string getTime() const;
 
-    vector<string> getAttendanceStatus() const;
-    vector<string> getDate() const;
-    vector<string> getTime() const;
-
-    void setAttendanceStatus(string stuID, string attendance);
-    void setDate(string stuID, string date);
-    void setTime(string stuID, string time);
+    void setAttendanceStatus(string attendance);
+    void setDate(string date);
+    void setTime(string time);
 };
 
 #endif

@@ -83,19 +83,7 @@ public:
             }
         }
 
-        vector<Student> v_students;
-        v_students.push_back(studentObj);
-
-        vector<string> v_status;
-        v_status.push_back(status);
-
-        vector<string> v_date;
-        v_date.push_back(date);
-
-        vector<string> v_time;
-        v_time.push_back(time);
-
-        return Attendance(aid, staffID , v_students, v_status, v_date, v_time);
+        return Attendance(aid, staffID , studentObj, status, date, time);
     }
 
     Student parseStudent(string line) {
