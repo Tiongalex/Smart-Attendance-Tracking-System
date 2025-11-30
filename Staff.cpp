@@ -6,12 +6,89 @@
 #include <fstream>
 #include <iomanip>
 #include <string>
+#include <regex>
+#include <ctime>
 using namespace std;
 
 int partition(vector<Attendance>& arr, int low, int high);
 void quickSort(vector<Attendance>& arr, int low, int high);
 void mergeSort(vector<Attendance>& attendances, int left, int right, bool sortByDate);
 void merge(vector<Attendance>& attendances, int left, int mid, int right, bool sortByDate);
+
+string findStaffNameByID(const string& staffID) {
+    ifstream file("staff.txt");
+    if (!file.is_open()) return "Unknown";
+
+    string line;
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+
+        stringstream ss(line);
+
+        string id, name = "", role, faculty;
+        ss >> id;         // read ID
+
+        if (id != staffID) continue;
+
+        // Now read everything until the word "Staff"
+        vector<string> tokens;
+        string word;
+        while (ss >> word) {
+            if (word == "Staff") {
+                role = word;
+                break;
+            }
+            tokens.push_back(word);
+        }
+
+        // join tokens into full name (handles spaces in name)
+        for (int i = 0; i < tokens.size(); i++) {
+            name += tokens[i];
+            if (i + 1 < tokens.size()) name += " ";
+        }
+
+        return name;
+    }
+
+    return "Unknown";
+}
+
+string findStudentNameByID(const string& studentID) {
+    ifstream file("student.txt");
+    if (!file.is_open()) return "Unknown";
+
+    string line;
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+
+        stringstream ss(line);
+
+        string id, name = "", role, course;
+        ss >> id;         // read ID
+
+        if (id != studentID) continue;
+
+        vector<string> tokens;
+        string word;
+        while (ss >> word) {
+            if (word == "Student") {
+                role = word;
+                break;
+            }
+            tokens.push_back(word);
+        }
+
+        // join tokens into full name (handles spaces in name)
+        for (int i = 0; i < tokens.size(); i++) {
+            name += tokens[i];
+            if (i + 1 < tokens.size()) name += " ";
+        }
+
+        return name;
+    }
+
+    return "Unknown";
+}
 
 vector<Attendance> filterByDate(const vector<Attendance>& records, string targetDate) {
     vector<Attendance> matchingRecords;
@@ -46,7 +123,7 @@ vector<Attendance> filterByStaffID(const vector<Attendance>& records, string tar
 vector<Attendance> filterByStudentID(const vector<Attendance>& records, string targetStudentID) {
     vector<Attendance> matchingRecords;
     for (const auto& record : records) {
-        if(record.getStudent().getID() == targetStudentID){
+        if(record.getStudentID() == targetStudentID){
             matchingRecords.push_back(record);
         }
     }
@@ -63,6 +140,19 @@ vector<Attendance> filterByStatus(const vector<Attendance>& records, string targ
     return matchingRecords;
 }
 
+bool isValidTime(const string& t) {
+    regex pattern("^([0-1]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$");
+    return regex_match(t, pattern);
+}
+
+string getTodayDate() {
+    time_t now = time(nullptr);
+    tm* t = localtime(&now);
+    char buf[11];
+    sprintf(buf, "%04d-%02d-%02d", t->tm_year + 1900, t->tm_mon + 1, t->tm_mday);
+    return string(buf);
+}
+
 Staff::Staff(string id, string name, string role, string faculty): User(id, name, role) {
     this->faculty=faculty;
 }
@@ -75,8 +165,51 @@ void Staff::setFaculty(string faculty){
     this->faculty=faculty;
 }
 
-void Staff::createAttendance(){
+void Staff::createAttendance(vector<Attendance>& attendance, vector<Attendance>& availableSession, string staffID){
+    string startTime, endTime;
 
+    cout << "Enter starting time (hh:mm:ss): ";
+    cin >> startTime;
+
+    if (!isValidTime(startTime)) {
+        cout << "Invalid format!\n";
+        return;
+    }
+
+    cout << "Enter ending time (hh:mm:ss): ";
+    cin >> endTime;
+
+    if (!isValidTime(endTime)) {
+        cout << "Invalid format!\n";
+        return;
+    }
+
+    if (endTime <= startTime) {
+        cout << "Ending time must be later than starting time!\n";
+        return;
+    }
+
+    // --- FIND LARGEST AID ---
+    int biggest = 0;
+    for (auto& att : attendance) {
+        string num = att.getAttendanceID().substr(3); // remove AID
+        biggest = max(biggest, stoi(num));
+    }
+
+
+    string newAID = "AID" + to_string(biggest + 1);
+
+    // Today’s date
+    string today = getTodayDate();
+
+    // Create new attendance
+    Attendance newAtt(newAID, staffID, today, startTime, endTime, "", "Absent");
+
+
+    // Add into today's available session list
+    availableSession.push_back(newAtt);
+
+    cout << "Attendance session " << newAID << " created successfully!\n";
 }
 
 void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
@@ -103,7 +236,7 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
     for (const auto& rec : records) {
         string d = rec.getDate();
         string t = rec.getTime();
-        string sName = rec.getStudent().getName();
+        string sName = rec.getStudentID();
         string status = rec.getAttendanceStatus();
 
         cout << "[" << d << " " << t << "] ID: " << rec.getAttendanceID() 
@@ -166,7 +299,7 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
             string d = rec.getDate();
             string t = rec.getTime();
             string status = rec.getAttendanceStatus();
-            string sName = rec.getStudent().getName();
+            string sName = rec.getStudentID();
             
             cout << d << " | " << t << " | " << rec.getAttendanceID() 
                  << " | " << sName << " | " << status << endl;
@@ -202,7 +335,8 @@ void Staff::exportSummary(const vector<Attendance>& records, string attendanceID
         outFile << "Attendance Summary Report\n";
         outFile << "========================================\n";
         outFile << "Session ID   : " << attendanceID << "\n";
-        outFile << "Lecturer     : " << this->getName() << "\n";
+        string lecturer = findStaffNameByID(records[0].getStaffID());
+        outFile << "Lecturer     : " << lecturer << "\n";
         outFile << "Total Students: " << total << "\n";
         outFile << "Stats        : Present: " << present << " | Absent: " << absent << " | Late: " << late << "\n";
         outFile << "========================================\n";
@@ -210,8 +344,8 @@ void Staff::exportSummary(const vector<Attendance>& records, string attendanceID
         outFile << "--------------------------------------------------\n";
 
         for (const auto& rec : sessionRecords) {
-            string name = rec.getStudent().getName();
-            string id = rec.getStudent().getID();
+            string name = findStudentNameByID(rec.getStudentID());
+            string id = rec.getStudentID();
             string status = rec.getAttendanceStatus();
             outFile << left << setw(25) << name << setw(15) << id << status << "\n";
         }
@@ -269,14 +403,14 @@ void merge(vector<Attendance>& attendances, int left, int mid, int right, bool s
 
 int partition(vector<Attendance>& arr, int low, int high){
     int loop, cutPoint, bottom, top;
-    string pivot = arr[low].getStudent().getName();
+    string pivot = arr[low].getStudentID();
     bottom = low;
     top = high;
 
     while(loop){
-        while (arr[top].getStudent().getName()>pivot)
+        while (arr[top].getStudentID()>pivot)
             top--;
-        while (arr[bottom].getStudent().getName() < pivot)
+        while (arr[bottom].getStudentID() < pivot)
             bottom++;
 
         if (bottom < top) swap(arr[bottom], arr[top]);
