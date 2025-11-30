@@ -15,7 +15,7 @@ public:
     string getFaculty();
     
     void setFaculty(string faculty);
-    void createAttendance();
+    void createAttendance(vector<Attendance>& attendance, vector<Attendance>& availableSession, string staffID);
     void viewAttendance(const vector<Attendance>& attendances);
     void exportSummary(const vector<Attendance>& records, string attendanceID);
 };
