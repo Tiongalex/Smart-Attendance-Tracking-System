@@ -1,34 +1,42 @@
 #ifndef ATTENDANCE_H
 #define ATTENDANCE_H
 
-#include "Student.h"
 #include <string>
-#include <vector>
 using namespace std;
 
-class Attendance{
+class Student;  // forward declaration
+
+class Attendance {
 private:
     string attendanceID;
     string staffID;
-    Student student;
+    string studentID;     // store only studentID, NOT Student object
     string attendanceStatus;
     string date;
     string time;
+    string endTime;
+
 public:
     Attendance();
-    Attendance(string attendanceID, string staffID, Student student, string attendanceStatus, string date, string time);
-    
-    string getStaffID() const ;
-    string getAttendanceID() const ;
 
-    Student getStudent() const;
+    Attendance(string attendanceID,
+               string staffID,
+               string date,
+               string time,
+               string endTime,
+               string studentID,
+               string attendanceStatus);
+
+    string getAttendanceID() const;
+    string getStaffID() const;
+    string getStudentID() const;
     string getAttendanceStatus() const;
     string getDate() const;
     string getTime() const;
+    string getEndTime() const;
 
-    void setAttendanceStatus(string attendance);
-    void setDate(string date);
-    void setTime(string time);
+    void setAttendanceStatus(string s);
+    void setStudentID(string id);
 };
 
 #endif
