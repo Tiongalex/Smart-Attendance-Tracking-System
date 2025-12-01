@@ -8,6 +8,7 @@
 #include <string>
 #include <regex>
 #include <ctime>
+#include <sstream>
 using namespace std;
 
 int partition(vector<Attendance>& arr, int low, int high);
@@ -311,7 +312,6 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
 
 void Staff::exportSummary(const vector<Attendance>& records, string attendanceID){
     cout << "   Generating Summary for Session: " << attendanceID << endl;
-
     vector<Attendance> sessionRecords = filterByAttendanceID(records, attendanceID);
     if (sessionRecords.empty()) {
         cout << "[Error] No records found for Attendance ID: " << attendanceID << endl;
@@ -401,30 +401,24 @@ void merge(vector<Attendance>& attendances, int left, int mid, int right, bool s
     while (j < n2) { attendances[k] = R[j]; j++; k++; }
 }
 
-int partition(vector<Attendance>& arr, int low, int high){
-    int loop, cutPoint, bottom, top;
-    string pivot = arr[low].getStudentID();
-    bottom = low;
-    top = high;
+int partition(vector<Attendance>& arr, int low, int high) {
+    string pivot = arr[high].getStudentID(); 
+    int i = (low - 1); 
 
-    while(loop){
-        while (arr[top].getStudentID()>pivot)
-            top--;
-        while (arr[bottom].getStudentID() < pivot)
-            bottom++;
-
-        if (bottom < top) swap(arr[bottom], arr[top]);
-        else{
-            loop = 0;
-            cutPoint = top;
+    for (int j = low; j <= high - 1; j++) {
+        if (arr[j].getStudentID() <= pivot) {
+            i++; 
+            swap(arr[i], arr[j]);
         }
     }
-    return cutPoint;
+    swap(arr[i + 1], arr[high]);
+    return (i + 1);
 }
-void quickSort(vector<Attendance>& arr, int low, int high){
+
+void quickSort(vector<Attendance>& arr, int low, int high) {
     if (low < high) {
         int cut = partition(arr, low, high);
-        quickSort(arr, low, cut);
-        quickSort(arr, cut+1, high);
+        quickSort(arr, low, cut - 1);
+        quickSort(arr, cut + 1, high);
     }
 }
