@@ -15,7 +15,8 @@ public:
     Login();
     Login(vector<string> accountType, vector<string> accountID, vector<string> accountPassword);
 
-    void login(); 
+    bool login(string type, string id, string pass); 
+    int sequentialSearch(string search_key, vector<string> array);
 };
 
 #endif

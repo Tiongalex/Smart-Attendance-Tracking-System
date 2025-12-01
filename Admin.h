@@ -7,10 +7,12 @@ class Admin : public User {
 public:
     Admin(string id, string name, string role);
     
-    void addStudent();
-    void editStudent();
-    void removeStudent();
+    void addRecord();
+    void editRecord();
+    void removeRecord();
     void viewStudent();
+    void viewAdmin();
+    void viewStaff();
 };
 
 #endif

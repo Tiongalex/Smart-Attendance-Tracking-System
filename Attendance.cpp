@@ -1,42 +1,25 @@
 #include "Attendance.h"
-#include <iostream>
-#include <string>
-#include <vector>
-using namespace std;
 
-Attendance::Attendance() {}
-
-Attendance::Attendance(string attendanceID, string staffID, vector<Student> student, vector<string> attendanceStatus, vector<string> date, vector<string> tume):
-attendanceID(attendanceID), staffID(staffID), student(student), attendanceStatus(attendanceStatus), date(date), time(time) {}
-
-string Attendance::getAttendanceID(){
-    return this->attendanceID;
+Attendance::Attendance() {
+    attendanceStatus = "Absent";
 }
 
-vector<Student> Attendance::getStudent(){
-    return this->student;
-}
+Attendance::Attendance(string attendanceID, string staffID, string date, string time, string endTime, string studentID, string status)
+    : attendanceID(attendanceID),
+      staffID(staffID),
+      date(date),
+      time(time),
+      endTime(endTime),
+      studentID(studentID), 
+      attendanceStatus(status) {}
 
-vector<string> Attendance::getAttendanceStatus(){
-    return this->attendanceStatus;
-}
+string Attendance::getAttendanceID() const { return attendanceID; }
+string Attendance::getStaffID() const { return staffID; }
+string Attendance::getStudentID() const { return studentID; }
+string Attendance::getAttendanceStatus() const { return attendanceStatus; }
+string Attendance::getDate() const { return date; }
+string Attendance::getTime() const { return time; }
+string Attendance::getEndTime() const { return endTime; }
 
-vector<string> Attendance::getDate(){
-    return this->date;
-}
-
-vector<string> Attendance::getTime(){
-    return this->time;
-}
-
-void Attendance::setAttendanceStatus(string stuID, string attendance){
-    
-}
-
-void Attendance::setDate(string stuID, string date){
-
-}
-
-void Attendance::setTime(string stuID, string time){
-    
-}
+void Attendance::setAttendanceStatus(string s) { attendanceStatus = s; }
+void Attendance::setStudentID(string id) { studentID = id; }

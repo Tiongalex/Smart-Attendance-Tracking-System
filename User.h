@@ -15,9 +15,9 @@ public:
     User();                         
     User(string id, string name, string role);   
 
-    string getID();
-    string getName();
-    string getRole();
+    string getID() const;
+    string getName() const;
+    string getRole() const;
 
     void setID(string id);
     void setName(string name);

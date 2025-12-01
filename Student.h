@@ -2,18 +2,27 @@
 #define STUDENT_H
 
 #include "User.h"
+#include <vector>
+#include <string>
+
+class Attendance;   
+
+using namespace std;
 
 class Student : public User {
 private:
     string course;
+
 public:
+    Student();  
     Student(string id, string name, string role, string course);
 
     string getCourse();
-    
     void setCourse(string course);
-    void checkIn(string id, string attendanceID);
-    void viewAttendance();
+
+    Attendance checkIn(string studentID, const vector<Attendance>& availableSession);
+
+    void viewAttendance(const vector<Attendance>& allRecords);    
 };
 
 #endif

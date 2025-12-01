@@ -2,7 +2,10 @@
 #define STAFF_H
 
 #include "User.h"
-
+#include "Attendance.h"
+#include <string>
+#include <vector>
+using namespace std;
 class Staff : public User {
 private:
     string faculty;
@@ -12,9 +15,9 @@ public:
     string getFaculty();
     
     void setFaculty(string faculty);
-    void createAttendance();
-    void viewAttendance();
-    void exportSummary(string attendanceID);
+    void createAttendance(vector<Attendance>& attendance, vector<Attendance>& availableSession, string staffID);
+    void viewAttendance(const vector<Attendance>& attendances);
+    void exportSummary(const vector<Attendance>& records, string attendanceID);
 };
 
 #endif
