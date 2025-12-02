@@ -1,4 +1,4 @@
-A24CS0001 Muhammad Adam Ashraff Student SECPH
-A24CS0002 Muhammad Afiq Student SECVH
-A24CS0062 Clarence Liong Ren Jing Student SCSEH
+A24CS0001 Muhammad Adam Ashraff Student SECPH 
+A24CS0002 Muhammad Afiq Student SECVH 
+A24CS0062 Clarence Liong Ren Jing Student SCSEH 
 A24CS0203 Tiong Tiew Cheng Student SCSEH
