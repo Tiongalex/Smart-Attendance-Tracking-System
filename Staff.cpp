@@ -254,7 +254,7 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
     cout << "2. Filter by Date (YYYY-MM-DD)" << endl;
     cout << "3. Filter by Attendance ID" << endl;
     cout << "4. Filter by Student ID" << endl;
-    cout << "5. Filter by Status (Present/Absent)" << endl;
+    cout << "5. Filter by Status (Present/Absent/Late)" << endl;
     cout << "Enter choice: ";
     cin >> choice;
 
