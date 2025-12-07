@@ -27,11 +27,10 @@ string findStaffNameByID(const string& staffID) {
         stringstream ss(line);
 
         string id, name = "", role, faculty;
-        ss >> id;         // read ID
+        ss >> id;         
 
         if (id != staffID) continue;
 
-        // Now read everything until the word "Staff"
         vector<string> tokens;
         string word;
         while (ss >> word) {
@@ -42,7 +41,6 @@ string findStaffNameByID(const string& staffID) {
             tokens.push_back(word);
         }
 
-        // join tokens into full name (handles spaces in name)
         for (int i = 0; i < tokens.size(); i++) {
             name += tokens[i];
             if (i + 1 < tokens.size()) name += " ";
@@ -65,7 +63,7 @@ string findStudentNameByID(const string& studentID) {
         stringstream ss(line);
 
         string id, name = "", role, course;
-        ss >> id;         // read ID
+        ss >> id;     
 
         if (id != studentID) continue;
 
@@ -79,7 +77,6 @@ string findStudentNameByID(const string& studentID) {
             tokens.push_back(word);
         }
 
-        // join tokens into full name (handles spaces in name)
         for (int i = 0; i < tokens.size(); i++) {
             name += tokens[i];
             if (i + 1 < tokens.size()) name += " ";
@@ -190,24 +187,19 @@ void Staff::createAttendance(vector<Attendance>& attendance, vector<Attendance>&
         return;
     }
 
-    // --- FIND LARGEST AID ---
     int biggest = 0;
     for (auto& att : attendance) {
-        string num = att.getAttendanceID().substr(3); // remove AID
+        string num = att.getAttendanceID().substr(3); 
         biggest = max(biggest, stoi(num));
     }
 
 
     string newAID = "AID" + to_string(biggest + 1);
 
-    // Today’s date
     string today = getTodayDate();
 
-    // Create new attendance
     Attendance newAtt(newAID, staffID, today, startTime, endTime, "", "Absent");
 
-
-    // Add into today's available session list
     availableSession.push_back(newAtt);
 
     cout << "Attendance session " << newAID << " created successfully!\n";
