@@ -25,7 +25,6 @@ void appendRecord(const string& filename, const string& record) {
     bool addNewline = false;
 
     if (in) {
-        // move to last character
         in.seekg(0, ios::end);
         long long size = in.tellg();
 
@@ -133,7 +132,6 @@ void Admin::editRecord() {
         if (!parts.empty() && parts[0] == targetID) {
             found = true;
 
-            // Rewrite new record based on role
             if (role == "Admin") {
                 string id = targetID, name;
                 cout << "Enter new Admin Name: ";
@@ -166,7 +164,6 @@ void Admin::editRecord() {
         return;
     }
 
-    // Rewrite file
     ofstream outfile(filename);
     for (auto &l : lines) outfile << l << "\n";
     outfile.close();
@@ -209,7 +206,7 @@ void Admin::removeRecord() {
         vector<string> parts = split(line);
         if (!parts.empty() && parts[0] == targetID) {
             removed = true;
-            continue;  // skip this line
+            continue;  
         }
         lines.push_back(line);
     }
