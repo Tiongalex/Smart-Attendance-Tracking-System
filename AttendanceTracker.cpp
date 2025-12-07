@@ -94,10 +94,8 @@ public:
             vector<string> parts;
             string word;
 
-            // split full line into parts
             while (ss >> word) parts.push_back(word);
 
-            // find role position
             int roleIndex = -1;
             for (int i = 0; i < parts.size(); i++) {
                 if (parts[i] == "Admin" || parts[i] == "Staff" || parts[i] == "Student") {
@@ -106,7 +104,6 @@ public:
                 }
             }
 
-            // build ID (all words before the role)
             string id = "";
             for (int i = 0; i < roleIndex; i++) {
                 id += parts[i];
@@ -116,7 +113,6 @@ public:
             string type = parts[roleIndex];
             string password = parts[roleIndex + 1];
 
-            // store into Login object vectors
             ids.push_back(id);
             types.push_back(type);
             passes.push_back(password);
@@ -225,7 +221,6 @@ public:
     }
 
     void pressEnterToContinue() {
-        // Clear any leftover characters (including newline)
         if (cin.peek() == '\n')
             cin.ignore();
 
@@ -234,7 +229,7 @@ public:
     }
 
     int findStudentIndex(const AttendanceTracker& system, const string& id) {
-        auto students = system.getStudents(); // returns vector<Student>
+        auto students = system.getStudents(); 
         for (int i = 0; i < (int)students.size(); ++i) {
             if (students[i].getID() == id) return i;
         }
@@ -268,7 +263,6 @@ public:
     vector<Attendance>& getAvailableSession() {
         string today = getTodayDate();
 
-        // --- 1) REMOVE sessions not from today ---
         availableSession.erase(
             remove_if(availableSession.begin(), availableSession.end(),
                 [&](const Attendance& att) {
@@ -277,11 +271,9 @@ public:
             availableSession.end()
         );
 
-        // --- 2) SCAN attendance vector for today's sessions ---
         for (const Attendance& att : attendance) {
             if (att.getDate() == today) {
 
-                // Check if session already exists inside availableSession
                 bool exists = false;
                 for (const Attendance& a : availableSession) {
                     if (a.getAttendanceID() == att.getAttendanceID()) {
@@ -290,7 +282,6 @@ public:
                     }
                 }
 
-                // If not exist, add it
                 if (!exists) {
                     availableSession.push_back(att);
                 }
@@ -304,10 +295,8 @@ public:
     void saveNewAttendance(const Attendance& att) {
         attendance.push_back(att);
 
-        // Check and clean file ending
         fstream f("attendance.txt", ios::in | ios::out);
         if (!f) {
-            // File does not exist — create new
             ofstream newFile("attendance.txt");
             newFile << att.getAttendanceID() << " "
                     << att.getStaffID() << " "
@@ -319,7 +308,6 @@ public:
             return;
         }
 
-        // Move to end to check last character
         f.seekg(0, ios::end);
         long long pos = f.tellg();
 
@@ -334,7 +322,6 @@ public:
 
         f.close();
 
-        // Append correctly
         ofstream out("attendance.txt", ios::app);
         if (needNewline) out << "\n";
 
@@ -370,7 +357,6 @@ int main() {
 
         int topChoice;
         if (!(cin >> topChoice)) {
-            // invalid input handling
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Invalid input. Press Enter to return to menu.";
@@ -399,7 +385,6 @@ int main() {
         cout << "Role: " << role << "\n";
         cout << "Enter Account ID: ";
         string inputID;
-        // consume remaining newline before getline
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         getline(cin, inputID);
 
@@ -407,7 +392,6 @@ int main() {
         string inputPass;
         getline(cin, inputPass);
 
-        // Attempt login using Login::login (sequential search inside)
         bool ok = system.getLogin().login(role, inputID, inputPass);
 
         if (!ok) {
@@ -415,13 +399,11 @@ int main() {
             cout << "Login Failed: account ID or account password not match.\n";
             cout << "Press Enter to continue...";
             cin.get();
-            continue; // return to top menu
+            continue; 
         }
 
-        // Login success: set userID in system
         system.setuserID(inputID);
 
-        // Branch to role menus
         if (role == "Student") {
             while (true) {
                 system.clearScreen();
@@ -441,18 +423,16 @@ int main() {
                 }
 
                 if (sChoice == 0) {
-                    // logout
                     system.setuserID("");
-                    break; // return to top menu
+                    break; 
                 } else if (sChoice == 1) {
-                    // find student object
                     int idx = system.findStudentIndex(system, system.getUserID());
                     if (idx == -1) {
                         cout << "Student record not found.\n";
                         system.pressEnterToContinue();
                         continue;
                     }
-                    auto students = system.getStudents(); // copy
+                    auto students = system.getStudents();
                     Attendance newAtt = students[idx].checkIn(system.getUserID(), system.getAvailableSession());
                     if (newAtt.getAttendanceID() != "") {
                         system.saveNewAttendance(newAtt); 
@@ -466,16 +446,15 @@ int main() {
                         continue;
                     }
                     auto students = system.getStudents();
-                    students[idx].viewAttendance(system.getAttendances()); // placeholder
+                    students[idx].viewAttendance(system.getAttendances()); 
                     system.pressEnterToContinue();
                 } else {
                     cout << "Invalid choice.\n";
                     system.pressEnterToContinue();
                 }
-            } // end student loop
+            } 
         }
         else if (role == "Staff") {
-            // find Staff object index to call methods
             int staffIdx = system.findStaffIndex(system, system.getUserID());
             if (staffIdx == -1) {
                 system.clearScreen();
@@ -507,12 +486,10 @@ int main() {
                     system.setuserID("");
                     break;
                 } else if (sfChoice == 1) {
-                    // placeholder for createAttendance
                     auto staffs = system.getStaff();
                     staffs[staffIdx].createAttendance(system.getAttendances(), system.getAvailableSession(), system.getUserID()); 
                     system.pressEnterToContinue();
                 } else if (sfChoice == 2) {
-                    // call viewAttendance with full attendance list
                     auto staffs = system.getStaff();
                     auto attendances = system.getAttendances();
                     staffs[staffIdx].viewAttendance(attendances);
@@ -530,7 +507,7 @@ int main() {
                     cout << "Invalid choice.\n";
                     system.pressEnterToContinue();
                 }
-            } // end staff loop
+            } 
         }
         else if (role == "Admin") {
             int adminIdx = system.findAdminIndex(system, system.getUserID());
@@ -565,7 +542,6 @@ int main() {
                     system.setuserID("");
                     break;
                 } else if (aChoice == 1) {
-                    // View Records submenu
                     while (true) {
                         system.clearScreen();
                         cout << "--- View Records ---\n";
@@ -596,33 +572,30 @@ int main() {
                             system.pressEnterToContinue();
                             continue;
                         }
-                        // after printing, wait for Enter then return to Admin menu
                         system.pressEnterToContinue();
                         break;
-                    } // end view records submenu
+                    } 
                 } else if (aChoice == 2) {
-                    // Add Records - placeholder
-                    // you asked to leave only the line of execution - call admin method
                     auto admins = system.getAdmins();
-                    admins[adminIdx].addRecord(); // placeholder
+                    admins[adminIdx].addRecord(); 
                     system.pressEnterToContinue();
                 } else if (aChoice == 3) {
                     auto admins = system.getAdmins();
-                    admins[adminIdx].editRecord(); // placeholder
+                    admins[adminIdx].editRecord(); 
                     system.pressEnterToContinue();
                 } else if (aChoice == 4) {
                     auto admins = system.getAdmins();
-                    admins[adminIdx].removeRecord(); // placeholder
+                    admins[adminIdx].removeRecord(); 
                     system.pressEnterToContinue();
                 } else {
                     cout << "Invalid selection.\n";
                     system.pressEnterToContinue();
                 }
-            } // end admin loop
+            } 
         }
 
-        // after logout continue to top of outer loop (login page)
-    } // outer while
+     
+    } 
 
     return 0;
 }
