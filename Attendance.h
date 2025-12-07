@@ -4,13 +4,11 @@
 #include <string>
 using namespace std;
 
-class Student;  // forward declaration
-
 class Attendance {
 private:
     string attendanceID;
     string staffID;
-    string studentID;     // store only studentID, NOT Student object
+    string studentID;    
     string attendanceStatus;
     string date;
     string time;
