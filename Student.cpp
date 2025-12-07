@@ -25,7 +25,7 @@ void Student::setCourse(string course){
 Attendance Student::checkIn(string studentID, const vector<Attendance>& availableSession){
     if (availableSession.empty()) {
         cout << "No attendance sessions available today.\n";
-        return Attendance(); // return empty object
+        return Attendance(); 
     }
 
     cout << "Available Attendance Sessions:\n";
@@ -57,11 +57,6 @@ Attendance Student::checkIn(string studentID, const vector<Attendance>& availabl
         return Attendance();
     }
 
-    // ------------------------------------------------------
-    //  Determine Present or Late
-    // ------------------------------------------------------
-
-    // Get current time
     time_t now = time(nullptr);
     tm *t = localtime(&now);
 
@@ -72,16 +67,12 @@ Attendance Student::checkIn(string studentID, const vector<Attendance>& availabl
     string nowStr = currentTimeStr;
     string endTime = session.getEndTime();
 
-    string status = "Absent"; // default
+    string status = "Absent"; 
 
     if (nowStr <= endTime)
         status = "Present";
     else
         status = "Late";
-
-    // ------------------------------------------------------
-    // Create Attendance for this student
-    // ------------------------------------------------------
 
     Attendance newRecord(
         session.getAttendanceID(),
@@ -144,7 +135,6 @@ void merge2(vector<Attendance>& attendances, int left, int mid, int right, bool 
 void Student::viewAttendance(const vector<Attendance>& allRecords) {
     cout << "\n--- Attendance History for Student: " << this->getName() << " ---\n";
 
-    // Collect only this student's records
     vector<Attendance> myRecords;
     for (const auto& rec : allRecords) {
         if (rec.getStudentID() == this->getID()) {
@@ -157,7 +147,6 @@ void Student::viewAttendance(const vector<Attendance>& allRecords) {
         return;
     }
 
-    // Sort by date using your mergeSort function
     mergeSort2(myRecords, 0, myRecords.size() - 1, true);
 
     cout << "\nAttendance Records (Sorted by Date):\n";
