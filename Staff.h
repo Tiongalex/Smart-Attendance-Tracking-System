@@ -3,6 +3,7 @@
 
 #include "User.h"
 #include "Attendance.h"
+#include "LinkedList.h"
 #include <string>
 #include <vector>
 using namespace std;
@@ -15,9 +16,9 @@ public:
     string getFaculty();
     
     void setFaculty(string faculty);
-    void createAttendance(vector<Attendance>& attendance, vector<Attendance>& availableSession, string staffID);
-    void viewAttendance(const vector<Attendance>& attendances);
-    void exportSummary(const vector<Attendance>& records, string attendanceID);
+    void createAttendance(LinkedList<Attendance>& attendance, LinkedList<Attendance>& availableSession, string staffID);
+    void viewAttendance(LinkedList<Attendance>& attendances);
+    void exportSummary(LinkedList<Attendance>& records, string attendanceID);
 };
 
 #endif

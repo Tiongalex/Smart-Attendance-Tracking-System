@@ -3,20 +3,21 @@
 
 #include <string>
 #include <vector>
+#include "LinkedList.h"
 using namespace std;
 
 class Login {
 private:
-    vector<string> accountType;
-    vector<string> accountID;
-    vector<string> accountPassword;
+    LinkedList<string> accountType;
+    LinkedList<string> accountID;
+    LinkedList<string> accountPassword;
 
 public:
     Login();
-    Login(vector<string> accountType, vector<string> accountID, vector<string> accountPassword);
+    Login(const LinkedList<string>& accountType, const LinkedList<string>& accountID, const LinkedList<string>& accountPassword);
 
-    bool login(string type, string id, string pass); 
-    int sequentialSearch(string search_key, vector<string> array);
+    bool login(const string& type, const string& id, const string& pass); 
+    int sequentialSearch(const string& search_key, const LinkedList<string>& array);
 };
 
 #endif

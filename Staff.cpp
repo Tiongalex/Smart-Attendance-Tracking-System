@@ -1,5 +1,6 @@
 #include "Staff.h"
 #include "Attendance.h"
+#include "LinkedList.h"
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -11,10 +12,10 @@
 #include <sstream>
 using namespace std;
 
-int partition(vector<Attendance>& arr, int low, int high);
-void quickSort(vector<Attendance>& arr, int low, int high);
-void mergeSort(vector<Attendance>& attendances, int left, int right, bool sortByDate);
-void merge(vector<Attendance>& attendances, int left, int mid, int right, bool sortByDate);
+int partition(LinkedList<Attendance>& arr, int low, int high);
+void quickSort(LinkedList<Attendance>& arr, int low, int high);
+void mergeSort(LinkedList<Attendance>& attendances, int left, int right, bool sortByDate);
+void merge(LinkedList<Attendance>& attendances, int left, int mid, int right, bool sortByDate);
 
 string findStaffNameByID(const string& staffID) {
     ifstream file("staff.txt");
@@ -88,21 +89,21 @@ string findStudentNameByID(const string& studentID) {
     return "Unknown";
 }
 
-vector<Attendance> filterByDate(const vector<Attendance>& records, string targetDate) {
-    vector<Attendance> matchingRecords;
-    for (const auto& record : records) {
-            if (record.getDate() == targetDate) {
-                matchingRecords.push_back(record);
+LinkedList<Attendance> filterByDate(LinkedList<Attendance>& records, string targetDate) {
+    LinkedList<Attendance> matchingRecords;
+    for (int i=0;i<records.size();i++) {
+            if (records.searchNode(i)->getDate() == targetDate) {
+                matchingRecords.addNode(*records.searchNode(i));
             }
     }
     return matchingRecords;
 }
 
-vector<Attendance> filterByAttendanceID(const vector<Attendance>& records, string targetID) {
-    vector<Attendance> matchingRecords;
-    for (const auto& record : records) {
-        if (record.getAttendanceID() == targetID) {
-            matchingRecords.push_back(record);
+LinkedList<Attendance> filterByAttendanceID(LinkedList<Attendance>& records, string targetID) {
+    LinkedList<Attendance> matchingRecords;
+    for (int i=0;i<records.size();i++) {
+        if (records.searchNode(i)->getAttendanceID() == targetID) {
+            matchingRecords.addNode(*records.searchNode(i));
         }
     }
     return matchingRecords;
@@ -118,21 +119,21 @@ vector<Attendance> filterByStaffID(const vector<Attendance>& records, string tar
     return matchingRecords;
 }
 
-vector<Attendance> filterByStudentID(const vector<Attendance>& records, string targetStudentID) {
-    vector<Attendance> matchingRecords;
-    for (const auto& record : records) {
-        if(record.getStudentID() == targetStudentID){
-            matchingRecords.push_back(record);
+LinkedList<Attendance> filterByStudentID(LinkedList<Attendance>& records, string targetStudentID) {
+    LinkedList<Attendance> matchingRecords;
+    for (int i=0;i<records.size();i++) {
+        if(records.searchNode(i)->getStudentID() == targetStudentID){
+            matchingRecords.addNode(*records.searchNode(i));
         }
     }
     return matchingRecords;
 }
 
-vector<Attendance> filterByStatus(const vector<Attendance>& records, string targetStatus) {
-    vector<Attendance> matchingRecords;
-    for (const auto& record : records) {
-        if (record.getAttendanceStatus() == targetStatus) {
-            matchingRecords.push_back(record);
+LinkedList<Attendance> filterByStatus(LinkedList<Attendance>& records, string targetStatus) {
+    LinkedList<Attendance> matchingRecords;
+    for (int i=0;i<records.size();i++) {
+        if (records.searchNode(i)->getAttendanceStatus() == targetStatus) {
+            matchingRecords.addNode(*records.searchNode(i));
         }
     }
     return matchingRecords;
@@ -163,7 +164,7 @@ void Staff::setFaculty(string faculty){
     this->faculty=faculty;
 }
 
-void Staff::createAttendance(vector<Attendance>& attendance, vector<Attendance>& availableSession, string staffID){
+void Staff::createAttendance(LinkedList<Attendance>& attendance, LinkedList<Attendance>& availableSession, string staffID){
     string startTime, endTime;
 
     cout << "Enter starting time (hh:mm:ss): ";
@@ -188,8 +189,8 @@ void Staff::createAttendance(vector<Attendance>& attendance, vector<Attendance>&
     }
 
     int biggest = 0;
-    for (auto& att : attendance) {
-        string num = att.getAttendanceID().substr(3); 
+    for (int i=0;i<attendance.size();i++) {
+        string num = attendance.searchNode(i)->getAttendanceID().substr(3); 
         biggest = max(biggest, stoi(num));
     }
 
@@ -200,23 +201,23 @@ void Staff::createAttendance(vector<Attendance>& attendance, vector<Attendance>&
 
     Attendance newAtt(newAID, staffID, today, startTime, endTime, "", "Absent");
 
-    availableSession.push_back(newAtt);
+    availableSession.addNode(newAtt);
 
     cout << "Attendance session " << newAID << " created successfully!\n";
 }
 
-void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
+void Staff::viewAttendance(LinkedList<Attendance>& inputAttendances){
     cout << "\n--- Staff View: " << this->getName() << " ---" << endl;
     
-    vector<Attendance> records;
-    for(const auto& rec : inputAttendances){
-        if(rec.getStaffID() == this->getID()){
-            records.push_back(rec);
+    LinkedList<Attendance> records;
+    for(int i=0;i<inputAttendances.size();i++){
+        if(inputAttendances.searchNode(i)->getStaffID() == this->getID()){
+            records.addNode(*inputAttendances.searchNode(i));
         }
     }
 
 
-    if (records.empty()) {
+    if (!records.getHead()) {
         cout << "No attendance records found for you Staff ID." << endl;
         return;
     }
@@ -226,14 +227,13 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
     cout << "Attendance Records (Sorted by Date):" << endl;
     cout << "=====================================" << endl;
     
-    for (const auto& rec : records) {
-        string d = rec.getDate();
-        string t = rec.getTime();
-        string sName = rec.getStudentID();
-        string status = rec.getAttendanceStatus();
+    for (int i=0;i<records.size();i++) {
+        string d = records.searchNode(i)->getDate();
+        string t = records.searchNode(i)->getTime();
+        string sName = records.searchNode(i)->getStudentID();
+        string status = records.searchNode(i)->getAttendanceStatus();
 
-        cout << "[" << d << " " << t << "] ID: " << rec.getAttendanceID() 
-             << " | " << sName << " (" << status << ")" << endl;
+        cout << "[" << d << " " << t << "] ID: " << records.searchNode(i)->getAttendanceID() << " | " << sName << " (" << status << ")" << endl;
     }
     
     int choice;
@@ -252,31 +252,41 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
 
     switch (choice) {
         case 1:
-            results = records; 
+            for (int i = 0; i < records.size(); i++)
+                results.push_back(*records.searchNode(i));
             break;
         case 2:
             cout << "Enter Date: ";
             cin >> searchKey;
-            results = filterByDate(records, searchKey);
+            for (int i = 0; i < records.size(); i++)
+                if (records.searchNode(i)->getDate() == searchKey)
+                    results.push_back(*records.searchNode(i));
             break;
         case 3:
             cout << "Enter Attendance ID: ";
             cin >> searchKey;
-            results = filterByAttendanceID(records, searchKey);
+            for (int i = 0; i < records.size(); i++)
+                if (records.searchNode(i)->getAttendanceID() == searchKey)
+                    results.push_back(*records.searchNode(i));
             break;
         case 4:
             cout << "Enter Student ID: ";
             cin >> searchKey;
-            results = filterByStudentID(records, searchKey);
+            for (int i = 0; i < records.size(); i++)
+                if (records.searchNode(i)->getStudentID() == searchKey)
+                    results.push_back(*records.searchNode(i));
             break;
         case 5:
             cout << "Enter Status: ";
             cin >> searchKey;
-            results = filterByStatus(records, searchKey);
+            for (int i = 0; i < records.size(); i++)
+                if (records.searchNode(i)->getAttendanceStatus() == searchKey)
+                    results.push_back(*records.searchNode(i));
             break;
         default:
             cout << "Invalid choice. Showing all records." << endl;
-            results = records;
+            for (int i = 0; i < records.size(); i++)
+                results.push_back(*records.searchNode(i));
             break;
     }
 
@@ -287,25 +297,22 @@ void Staff::viewAttendance(const vector<Attendance>& inputAttendances){
         cout << "----------------------------------------------------------------" << endl;
         cout << "Date       | Time     | AttID  | Student Name         | Status" << endl;
         cout << "----------------------------------------------------------------" << endl;
-        
-        for (const auto& rec : results) {
-            string d = rec.getDate();
-            string t = rec.getTime();
-            string status = rec.getAttendanceStatus();
-            string sName = rec.getStudentID();
-            
-            cout << d << " | " << t << " | " << rec.getAttendanceID() 
-                 << " | " << sName << " | " << status << endl;
+
+        for (auto &att : results) {
+            string sName = findStudentNameByID(att.getStudentID());
+            cout << att.getDate() << " | " << att.getTime() << " | " << att.getAttendanceID()
+                << " | " << sName << " | " << att.getAttendanceStatus() << endl;
         }
+
         cout << "----------------------------------------------------------------" << endl;
         cout << "Total displayed: " << results.size() << endl;
     }
 }
 
-void Staff::exportSummary(const vector<Attendance>& records, string attendanceID){
+void Staff::exportSummary(LinkedList<Attendance>& records, string attendanceID){
     cout << "   Generating Summary for Session: " << attendanceID << endl;
-    vector<Attendance> sessionRecords = filterByAttendanceID(records, attendanceID);
-    if (sessionRecords.empty()) {
+    LinkedList<Attendance> sessionRecords = filterByAttendanceID(records, attendanceID);
+    if (!sessionRecords.getHead()) {
         cout << "[Error] No records found for Attendance ID: " << attendanceID << endl;
         return;
     }
@@ -313,8 +320,8 @@ void Staff::exportSummary(const vector<Attendance>& records, string attendanceID
     int total = sessionRecords.size();
     int present = 0, absent = 0, late = 0;
 
-    for (const auto& rec : sessionRecords) {
-        string status = rec.getAttendanceStatus();
+    for (int i=0;i<sessionRecords.size();i++) {
+        string status = sessionRecords.searchNode(i)->getAttendanceStatus();
         if (status == "Present") present++;
         else if (status == "Absent") absent++;
         else if (status == "Late") late++;
@@ -327,7 +334,7 @@ void Staff::exportSummary(const vector<Attendance>& records, string attendanceID
         outFile << "Attendance Summary Report\n";
         outFile << "========================================\n";
         outFile << "Session ID   : " << attendanceID << "\n";
-        string lecturer = findStaffNameByID(records[0].getStaffID());
+        string lecturer = findStaffNameByID(records.searchNode(0)->getStaffID());
         outFile << "Lecturer     : " << lecturer << "\n";
         outFile << "Total Students: " << total << "\n";
         outFile << "Stats        : Present: " << present << " | Absent: " << absent << " | Late: " << late << "\n";
@@ -335,10 +342,10 @@ void Staff::exportSummary(const vector<Attendance>& records, string attendanceID
         outFile << left << setw(25) << "Student Name" << setw(15) << "Student ID" << "Status\n";
         outFile << "--------------------------------------------------\n";
 
-        for (const auto& rec : sessionRecords) {
-            string name = findStudentNameByID(rec.getStudentID());
-            string id = rec.getStudentID();
-            string status = rec.getAttendanceStatus();
+        for (int i=0;i<sessionRecords.size();i++) {
+            string name = findStudentNameByID(sessionRecords.searchNode(i)->getStudentID());
+            string id = sessionRecords.searchNode(i)->getStudentID();
+            string status = sessionRecords.searchNode(i)->getAttendanceStatus();
             outFile << left << setw(25) << name << setw(15) << id << status << "\n";
         }
         outFile.close();
@@ -351,7 +358,7 @@ void Staff::exportSummary(const vector<Attendance>& records, string attendanceID
     }
 }
 
-void mergeSort(vector<Attendance>& attendances, int left, int right, bool sortByDate) {
+void mergeSort(LinkedList<Attendance>& attendances, int left, int right, bool sortByDate) {
     if (left < right) {
         int mid = left + (right - left) / 2;
         mergeSort(attendances, left, mid, sortByDate);
@@ -360,15 +367,15 @@ void mergeSort(vector<Attendance>& attendances, int left, int right, bool sortBy
     }
 }
 
-void merge(vector<Attendance>& attendances, int left, int mid, int right, bool sortByDate) {
+void merge(LinkedList<Attendance>& attendances, int left, int mid, int right, bool sortByDate) {
     int n1 = mid - left + 1;
     int n2 = right - mid;
 
     vector<Attendance> L(n1);
     vector<Attendance> R(n2);
 
-    for (int i = 0; i < n1; i++) L[i] = attendances[left + i];
-    for (int j = 0; j < n2; j++) R[j] = attendances[mid + 1 + j];
+    for (int i = 0; i < n1; i++) L[i] = *attendances.searchNode(left + i);
+    for (int j = 0; j < n2; j++) R[j] = *attendances.searchNode(mid + 1 + j);
 
     int i = 0;
     int j = 0;
@@ -379,35 +386,35 @@ void merge(vector<Attendance>& attendances, int left, int mid, int right, bool s
         string dateR = R[j].getDate();
 
         if ((sortByDate && dateL <= dateR) || (!sortByDate && dateL >= dateR)) {
-            attendances[k] = L[i];
+            *attendances.searchNode(k) = L[i];
             i++;
         } else {
-            attendances[k] = R[j];
+            *attendances.searchNode(k) = R[j];
             j++;
         }
         k++;
     }
 
-    while (i < n1) { attendances[k] = L[i]; i++; k++; }
+    while (i < n1) { *attendances.searchNode(k) = L[i]; i++; k++; }
 
-    while (j < n2) { attendances[k] = R[j]; j++; k++; }
+    while (j < n2) { *attendances.searchNode(k) = R[j]; j++; k++; }
 }
 
-int partition(vector<Attendance>& arr, int low, int high) {
-    string pivot = arr[high].getStudentID(); 
+int partition(LinkedList<Attendance>& arr, int low, int high) {
+    string pivot = arr.searchNode(high)->getStudentID(); 
     int i = (low - 1); 
 
     for (int j = low; j <= high - 1; j++) {
-        if (arr[j].getStudentID() <= pivot) {
+        if (arr.searchNode(j)->getStudentID() <= pivot) {
             i++; 
-            swap(arr[i], arr[j]);
+            swap(*arr.searchNode(i), *arr.searchNode(j));
         }
     }
-    swap(arr[i + 1], arr[high]);
+    swap(*arr.searchNode(i+1), *arr.searchNode(high));
     return (i + 1);
 }
 
-void quickSort(vector<Attendance>& arr, int low, int high) {
+void quickSort(LinkedList<Attendance>& arr, int low, int high) {
     if (low < high) {
         int cut = partition(arr, low, high);
         quickSort(arr, low, cut - 1);

@@ -1,12 +1,13 @@
 #include "Student.h"
 #include "Attendance.h"  
+#include "LinkedList.h"
 #include <iostream>
 #include <iomanip>
 #include <ctime>
 using namespace std;
 
-void mergeSort2(vector<Attendance>& attendances, int left, int right, bool sortByDate);
-void merge2(vector<Attendance>& attendances, int left, int mid, int right, bool sortByDate);
+void mergeSort2(LinkedList<Attendance>& attendances, int left, int right, bool sortByDate);
+void merge2(LinkedList<Attendance>& attendances, int left, int mid, int right, bool sortByDate);
 
 Student::Student() {}
 
@@ -22,31 +23,31 @@ void Student::setCourse(string course){
     this->course=course;
 }
 
-Attendance Student::checkIn(string studentID, const vector<Attendance>& availableSession){
-    if (availableSession.empty()) {
+Attendance Student::checkIn(string studentID, LinkedList<Attendance>& availableSession){
+    if (!availableSession.getHead()) {
         cout << "No attendance sessions available today.\n";
         return Attendance(); 
     }
 
     cout << "Available Attendance Sessions:\n";
-    for (auto &att : availableSession) {
-        cout << att.getAttendanceID() << " "
-             << att.getStaffID() << " "
-             << att.getDate() << " "
-             << att.getTime() << " "
-             << att.getEndTime() << "\n";
+    for (int i=0;i<availableSession.size();i++) {
+        cout << availableSession.searchNode(i)->getAttendanceID() << " "
+             << availableSession.searchNode(i)->getStaffID() << " "
+             << availableSession.searchNode(i)->getDate() << " "
+             << availableSession.searchNode(i)->getTime() << " "
+             << availableSession.searchNode(i)->getEndTime() << "\n";
     }
 
     cout << "\nEnter Attendance ID to check-in: ";
     string inputAID;
     cin >> inputAID;
 
-    Attendance session;
+    Attendance* session;
     bool found = false;
 
-    for (auto &att : availableSession) {
-        if (att.getAttendanceID() == inputAID) {
-            session = att;
+    for (int i=0;i<availableSession.size();i++) {
+        if (availableSession.searchNode(i)->getAttendanceID() == inputAID) {
+            session = availableSession.searchNode(i);
             found = true;
             break;
         }
@@ -61,11 +62,10 @@ Attendance Student::checkIn(string studentID, const vector<Attendance>& availabl
     tm *t = localtime(&now);
 
     char currentTimeStr[9];
-    sprintf(currentTimeStr, "%02d:%02d:%02d",
-            t->tm_hour, t->tm_min, t->tm_sec);
+    sprintf(currentTimeStr, "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
 
     string nowStr = currentTimeStr;
-    string endTime = session.getEndTime();
+    string endTime = session->getEndTime();
 
     string status = "Absent"; 
 
@@ -75,11 +75,11 @@ Attendance Student::checkIn(string studentID, const vector<Attendance>& availabl
         status = "Late";
 
     Attendance newRecord(
-        session.getAttendanceID(),
-        session.getStaffID(),
-        session.getDate(),
-        session.getTime(),
-        session.getEndTime(),
+        session->getAttendanceID(),
+        session->getStaffID(),
+        session->getDate(),
+        session->getTime(),
+        session->getEndTime(),
         studentID,
         status
     );
@@ -90,7 +90,7 @@ Attendance Student::checkIn(string studentID, const vector<Attendance>& availabl
     return newRecord;
 }
 
-void mergeSort2(vector<Attendance>& attendances, int left, int right, bool sortByDate) {
+void mergeSort2(LinkedList<Attendance>& attendances, int left, int right, bool sortByDate) {
     if (left < right) {
         int mid = left + (right - left) / 2;
         mergeSort2(attendances, left, mid, sortByDate);
@@ -99,15 +99,15 @@ void mergeSort2(vector<Attendance>& attendances, int left, int right, bool sortB
     }
 }
 
-void merge2(vector<Attendance>& attendances, int left, int mid, int right, bool sortByDate) {
+void merge2(LinkedList<Attendance>& attendances, int left, int mid, int right, bool sortByDate) {
     int n1 = mid - left + 1;
     int n2 = right - mid;
 
     vector<Attendance> L(n1);
     vector<Attendance> R(n2);
 
-    for (int i = 0; i < n1; i++) L[i] = attendances[left + i];
-    for (int j = 0; j < n2; j++) R[j] = attendances[mid + 1 + j];
+    for (int i = 0; i < n1; i++) L[i] = *attendances.searchNode(left + i);
+    for (int j = 0; j < n2; j++) R[j] = *attendances.searchNode(mid + 1 + j);
 
     int i = 0;
     int j = 0;
@@ -118,31 +118,31 @@ void merge2(vector<Attendance>& attendances, int left, int mid, int right, bool 
         string dateR = R[j].getDate();
 
         if ((sortByDate && dateL <= dateR) || (!sortByDate && dateL >= dateR)) {
-            attendances[k] = L[i];
+            *attendances.searchNode(k) = L[i];
             i++;
         } else {
-            attendances[k] = R[j];
+            *attendances.searchNode(k) = R[j];
             j++;
         }
         k++;
     }
 
-    while (i < n1) { attendances[k] = L[i]; i++; k++; }
+    while (i < n1) { *attendances.searchNode(k) = L[i]; i++; k++; }
 
-    while (j < n2) { attendances[k] = R[j]; j++; k++; }
+    while (j < n2) { *attendances.searchNode(k) = R[j]; j++; k++; }
 }
 
-void Student::viewAttendance(const vector<Attendance>& allRecords) {
+void Student::viewAttendance(LinkedList<Attendance>& allRecords) {
     cout << "\n--- Attendance History for Student: " << this->getName() << " ---\n";
 
-    vector<Attendance> myRecords;
-    for (const auto& rec : allRecords) {
-        if (rec.getStudentID() == this->getID()) {
-            myRecords.push_back(rec);
+    LinkedList<Attendance> myRecords;
+    for (int i=0;i<allRecords.size();i++) {
+        if (allRecords.searchNode(i)->getStudentID() == this->getID()) {
+            myRecords.addNode(*allRecords.searchNode(i));
         }
     }
 
-    if (myRecords.empty()) {
+    if (!myRecords.getHead()) {
         cout << "No attendance records found.\n";
         return;
     }
@@ -157,11 +157,11 @@ void Student::viewAttendance(const vector<Attendance>& allRecords) {
          << setw(10) << "Status" << "\n";
     cout << "----------------------------------------------\n";
 
-    for (const auto& rec : myRecords) {
-        cout << left << setw(12) << rec.getDate()
-             << setw(10) << rec.getTime()
-             << setw(10) << rec.getAttendanceID()
-             << setw(10) << rec.getAttendanceStatus()
+    for (int i=0;i<myRecords.size();i++) {
+        cout << left << setw(12) << myRecords.searchNode(i)->getDate()
+             << setw(10) << myRecords.searchNode(i)->getTime()
+             << setw(10) << myRecords.searchNode(i)->getAttendanceID()
+             << setw(10) << myRecords.searchNode(i)->getAttendanceStatus()
              << "\n";
     }
 

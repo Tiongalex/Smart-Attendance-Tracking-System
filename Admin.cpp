@@ -1,4 +1,5 @@
 #include "Admin.h"
+#include "LinkedList.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -7,11 +8,11 @@
 #include <limits>
 using namespace std;
 
-vector<string> split(const string &line) {
+LinkedList<string> split(const string &line) {
     stringstream ss(line);
-    vector<string> parts;
+    LinkedList<string> parts;                                      
     string temp;
-    while (ss >> temp) parts.push_back(temp);
+    while (ss >> temp) parts.addNode(temp);
     return parts;
 }
 
@@ -123,13 +124,13 @@ void Admin::editRecord() {
         return;
     }
 
-    vector<string> lines;
+    LinkedList<string> lines;                         
     string line;
     bool found = false;
 
     while (getline(infile, line)) {
-        vector<string> parts = split(line);
-        if (!parts.empty() && parts[0] == targetID) {
+        LinkedList<string> parts = split(line);
+        if (parts.getHead() && *parts.searchNode(0) == targetID) {
             found = true;
 
             if (role == "Admin") {
@@ -155,7 +156,7 @@ void Admin::editRecord() {
                 line = id + " " + name + " Student " + course;
             }
         }
-        lines.push_back(line);
+        lines.addNode(line);
     }
     infile.close();
 
@@ -165,7 +166,7 @@ void Admin::editRecord() {
     }
 
     ofstream outfile(filename);
-    for (auto &l : lines) outfile << l << "\n";
+    for (int i=0;i<lines.size();i++) outfile << *lines.searchNode(i) << "\n";
     outfile.close();
 
     cout << "Record updated successfully.\n";
@@ -198,17 +199,17 @@ void Admin::removeRecord() {
         return;
     }
 
-    vector<string> lines;
+    LinkedList<string> lines;                                 
     string line;
     bool removed = false;
 
     while (getline(infile, line)) {
-        vector<string> parts = split(line);
-        if (!parts.empty() && parts[0] == targetID) {
+        LinkedList<string> parts = split(line);
+        if (parts.getHead() && *parts.searchNode(0) == targetID) {
             removed = true;
             continue;  
         }
-        lines.push_back(line);
+        lines.addNode(line);
     }
     infile.close();
 
@@ -218,7 +219,7 @@ void Admin::removeRecord() {
     }
 
     ofstream outfile(filename);
-    for (auto &l : lines) outfile << l << "\n";
+    for (int i=0;i<lines.size();i++) outfile << *lines.searchNode(i) << "\n";
     outfile.close();
 
     cout << "Record removed successfully.\n";

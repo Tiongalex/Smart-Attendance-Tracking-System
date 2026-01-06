@@ -2,6 +2,7 @@
 #define STUDENT_H
 
 #include "User.h"
+#include "LinkedList.h"
 #include <vector>
 #include <string>
 
@@ -20,9 +21,9 @@ public:
     string getCourse();
     void setCourse(string course);
 
-    Attendance checkIn(string studentID, const vector<Attendance>& availableSession);
+    Attendance checkIn(string studentID, LinkedList<Attendance>& availableSession);
 
-    void viewAttendance(const vector<Attendance>& allRecords);    
+    void viewAttendance(LinkedList<Attendance>& allRecords);    
 };
 
 #endif

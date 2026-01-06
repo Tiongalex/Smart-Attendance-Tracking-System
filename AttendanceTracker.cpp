@@ -3,6 +3,7 @@
 #include "Staff.h"
 #include "Admin.h"
 #include "Attendance.h"
+#include "LinkedList.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -19,19 +20,19 @@ using namespace std;
 class AttendanceTracker{
 private:
     Login loginSystem;
-    vector<Student> student;
-    vector<Staff> staff;
-    vector<Admin> admin;
-    vector<Attendance> attendance;
+    LinkedList<Student> student;
+    LinkedList<Staff> staff;
+    LinkedList<Admin> admin;
+    LinkedList<Attendance> attendance;
     string userID;
-    vector<Attendance> availableSession;
+    LinkedList<Attendance> availableSession;
 public:
     AttendanceTracker(){
-        loadAdmins();
-        loadStaff();
-        loadStudents();
+        loadAdmins(); 
+        loadStaff(); 
+        loadStudents(); 
         loadAttendance(); 
-        loadLogin();
+        loadLogin(); 
     }
     
     string getUserID(){
@@ -46,7 +47,7 @@ public:
         ifstream file("admin.txt");
         string line;
         while (getline(file, line)) {
-            admin.push_back(parseAdmin(line));
+            admin.addNode(parseAdmin(line));
         }
     }
 
@@ -54,7 +55,7 @@ public:
         ifstream file("staff.txt");
         string line;
         while (getline(file, line)) {
-            staff.push_back(parseStaff(line));
+            staff.addNode(parseStaff(line));
         }
     }
 
@@ -62,7 +63,7 @@ public:
         ifstream file("student.txt");
         string line;
         while (getline(file, line)) {
-            student.push_back(parseStudent(line));
+            student.addNode(parseStudent(line));
         }
     }
 
@@ -75,51 +76,35 @@ public:
             return;
         }
 
-        while (getline(file, line)) attendance.push_back(parseAttendance(line));
+        while (getline(file, line)) attendance.addNode(parseAttendance(line));
     }
 
-    void loadLogin() {
-        ifstream file("login.txt");
-        string line;
-
-        if (!file.is_open()) {
-            cout << "Error: login.txt missing!" << endl;
-            return;
-        }
-
-        vector<string> types, ids, passes;
-
-        while (getline(file, line)) {
-            stringstream ss(line);
-            vector<string> parts;
-            string word;
-
-            while (ss >> word) parts.push_back(word);
-
-            int roleIndex = -1;
-            for (int i = 0; i < parts.size(); i++) {
-                if (parts[i] == "Admin" || parts[i] == "Staff" || parts[i] == "Student") {
-                    roleIndex = i;
-                    break;
-                }
-            }
-
-            string id = "";
-            for (int i = 0; i < roleIndex; i++) {
-                id += parts[i];
-                if (i < roleIndex - 1) id += " ";
-            }
-
-            string type = parts[roleIndex];
-            string password = parts[roleIndex + 1];
-
-            ids.push_back(id);
-            types.push_back(type);
-            passes.push_back(password);
-        }
-
-        loginSystem = Login(types, ids, passes);
+void loadLogin() {
+    ifstream file("login.txt");
+    if (!file.is_open()) {
+        cout << "Error: login.txt missing!" << endl;
+        return;
     }
+
+    LinkedList<string> ids, roles, passwords;
+    string line;
+    
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+
+        stringstream ss(line);
+        string id, role, pass;
+        ss >> id >> role >> pass;
+
+        if (id.empty() || role.empty() || pass.empty()) continue;
+
+        ids.addNode(id);
+        roles.addNode(role);
+        passwords.addNode(pass);
+    }
+
+    loginSystem = Login(roles, ids, passwords);
+}
 
     Attendance parseAttendance(string line) {
         stringstream ss(line);
@@ -221,33 +206,31 @@ public:
     }
 
     void pressEnterToContinue() {
-        if (cin.peek() == '\n')
-            cin.ignore();
-
         cout << "\nPress Enter to continue...";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cin.get();
     }
 
-    int findStudentIndex(const AttendanceTracker& system, const string& id) {
-        auto students = system.getStudents(); 
+    int findStudentIndex(AttendanceTracker& system, const string& id) {
+        auto& students = system.getStudents(); 
         for (int i = 0; i < (int)students.size(); ++i) {
-            if (students[i].getID() == id) return i;
+            if (students.searchNode(i)->getID() == id) return i;
         }
         return -1;
     }
 
-    int findStaffIndex(const AttendanceTracker& system, const string& id) {
-        auto staffs = system.getStaff();
+    int findStaffIndex(AttendanceTracker& system, const string& id) {
+        auto& staffs = system.getStaff();
         for (int i = 0; i < (int)staffs.size(); ++i) {
-            if (staffs[i].getID() == id) return i;
+            if (staffs.searchNode(i)->getID() == id) return i;
         }
         return -1;
     }
 
-    int findAdminIndex(const AttendanceTracker& system, const string& id) {
-        auto admins = system.getAdmins();
+    int findAdminIndex(AttendanceTracker& system, const string& id) {
+        auto& admins = system.getAdmins();
         for (int i = 0; i < (int)admins.size(); ++i) {
-            if (admins[i].getID() == id) return i;
+            if (admins.searchNode(i)->getID() == id) return i;
         }
         return -1;
     }
@@ -260,32 +243,54 @@ public:
         return string(buf);
     }
 
-    vector<Attendance>& getAvailableSession() {
+    LinkedList<Attendance>& getAvailableSession() {
         string today = getTodayDate();
 
-        availableSession.erase(
-            remove_if(availableSession.begin(), availableSession.end(),
-                [&](const Attendance& att) {
-                    return att.getDate() != today;
-                }),
-            availableSession.end()
-        );
+        // Remove old sessions from availableSession
+        Node<Attendance>* prev = nullptr;
+        Node<Attendance>* cur = availableSession.getHead();
 
-        for (const Attendance& att : attendance) {
-            if (att.getDate() == today) {
+        while (cur != nullptr) {
+            if (cur->data.getDate() != today) {
+                // delete this node
+                if (prev == nullptr) {
+                    // deleting head
+                    availableSession.setHead(cur->next);
+                } else {
+                    prev->next = cur->next;
+                }
 
+                Node<Attendance>* toDelete = cur;
+                cur = cur->next;
+                delete toDelete;
+                continue;
+            }
+
+            prev = cur;
+            cur = cur->next;
+        }
+
+        // Add today sessions if not already in availableSession
+        Node<Attendance>* a = attendance.getHead();
+        while (a != nullptr) {
+            if (a->data.getDate() == today) {
+
+                // check if exists
                 bool exists = false;
-                for (const Attendance& a : availableSession) {
-                    if (a.getAttendanceID() == att.getAttendanceID()) {
+                Node<Attendance>* b = availableSession.getHead();
+                while (b != nullptr) {
+                    if (b->data.getAttendanceID() == a->data.getAttendanceID()) {
                         exists = true;
                         break;
                     }
+                    b = b->next;
                 }
 
                 if (!exists) {
-                    availableSession.push_back(att);
+                    availableSession.addNode(a->data);
                 }
             }
+            a = a->next;
         }
 
         return availableSession;
@@ -293,7 +298,7 @@ public:
 
 
     void saveNewAttendance(const Attendance& att) {
-        attendance.push_back(att);
+        attendance.addNode(att);
 
         fstream f("attendance.txt", ios::in | ios::out);
         if (!f) {
@@ -336,10 +341,10 @@ public:
 
 
 
-        vector<Admin> getAdmins() const { return this->admin;}
-        vector<Staff> getStaff() const { return this->staff; }
-        vector<Student> getStudents() const{ return this->student; }
-        vector<Attendance>& getAttendances() { return this->attendance; }
+        LinkedList<Admin>& getAdmins() { return this->admin;}
+        LinkedList<Staff>& getStaff() { return this->staff; }
+        LinkedList<Student>& getStudents() { return this->student; }
+        LinkedList<Attendance>& getAttendances() { return this->attendance; }
         Login getLogin() const { return this->loginSystem; }
     };
 
@@ -409,7 +414,7 @@ int main() {
                 system.clearScreen();
                 cout << "--- Student Page ---\n";
                 int idx = system.findStudentIndex(system, system.getUserID());
-                cout << "Logged in as: " << system.getStudents()[idx].getName() << "\n\n";
+                cout << "Logged in as: " << system.getStudents().searchNode(idx)->getName() << "\n\n";
                 cout << "1. Check-in attendance\n";
                 cout << "2. View attendance history\n";
                 cout << "0. Log Out\n\n";
@@ -432,8 +437,8 @@ int main() {
                         system.pressEnterToContinue();
                         continue;
                     }
-                    auto students = system.getStudents();
-                    Attendance newAtt = students[idx].checkIn(system.getUserID(), system.getAvailableSession());
+                    auto& students = system.getStudents();
+                    Attendance newAtt = students.searchNode(idx)->checkIn(system.getUserID(), system.getAvailableSession());
                     if (newAtt.getAttendanceID() != "") {
                         system.saveNewAttendance(newAtt); 
                     }
@@ -445,8 +450,8 @@ int main() {
                         system.pressEnterToContinue();
                         continue;
                     }
-                    auto students = system.getStudents();
-                    students[idx].viewAttendance(system.getAttendances()); 
+                    auto& students = system.getStudents();
+                    students.searchNode(idx)->viewAttendance(system.getAttendances()); 
                     system.pressEnterToContinue();
                 } else {
                     cout << "Invalid choice.\n";
@@ -468,7 +473,7 @@ int main() {
                 system.clearScreen();
                 cout << "--- Staff Page ---\n";
                 int idx = system.findStaffIndex(system, system.getUserID());
-                cout << "Logged in as: " << system.getStaff()[idx].getName() << "\n\n";
+                cout << "Logged in as: " << system.getStaff().searchNode(idx)->getName() << "\n\n";
                 cout << "1. Create attendance session\n";
                 cout << "2. View attendance history\n";
                 cout << "3. Export attendance summary\n";
@@ -486,22 +491,22 @@ int main() {
                     system.setuserID("");
                     break;
                 } else if (sfChoice == 1) {
-                    auto staffs = system.getStaff();
-                    staffs[staffIdx].createAttendance(system.getAttendances(), system.getAvailableSession(), system.getUserID()); 
+                    auto& staffs = system.getStaff();
+                    staffs.searchNode(staffIdx)->createAttendance(system.getAttendances(), system.getAvailableSession(), system.getUserID()); 
                     system.pressEnterToContinue();
                 } else if (sfChoice == 2) {
-                    auto staffs = system.getStaff();
-                    auto attendances = system.getAttendances();
-                    staffs[staffIdx].viewAttendance(attendances);
+                    auto& staffs = system.getStaff();
+                    auto& attendances = system.getAttendances();
+                    staffs.searchNode(staffIdx)->viewAttendance(attendances);
                     system.pressEnterToContinue();
                 } else if (sfChoice == 3) {
                     cout << "Enter Attendance ID to export summary: ";
                     string attID;
                     cin >> ws;
                     getline(cin, attID);
-                    auto staffs = system.getStaff();
-                    auto attendances = system.getAttendances();
-                    staffs[staffIdx].exportSummary(attendances, attID);
+                    auto& staffs = system.getStaff();
+                    auto& attendances = system.getAttendances();
+                    staffs.searchNode(staffIdx)->exportSummary(attendances, attID);
                     system.pressEnterToContinue();
                 } else {
                     cout << "Invalid choice.\n";
@@ -523,7 +528,7 @@ int main() {
                 system.clearScreen();
                 cout << "--- Admin Page ---\n";
                 int idx = system.findAdminIndex(system, system.getUserID());
-                cout << "Logged in as: " << system.getAdmins()[idx].getName() << "\n\n";
+                cout << "Logged in as: " << system.getAdmins().searchNode(idx)->getName() << "\n\n";
                 cout << "1. View Records\n";
                 cout << "2. Add Records\n";
                 cout << "3. Edit Records\n";
@@ -560,13 +565,13 @@ int main() {
                         system.clearScreen();
                         if (vr == 1) {
                             int idx = system.findAdminIndex(system, system.getUserID());
-                            system.getAdmins()[idx].viewAdmin(); 
+                            system.getAdmins().searchNode(idx)->viewAdmin(); 
                         } else if (vr == 2) {
                             int idx = system.findAdminIndex(system, system.getUserID());
-                            system.getAdmins()[idx].viewStaff(); 
+                            system.getAdmins().searchNode(idx)->viewStaff(); 
                         } else if (vr == 3) {
                             int idx = system.findAdminIndex(system, system.getUserID());
-                            system.getAdmins()[idx].viewStudent(); 
+                            system.getAdmins().searchNode(idx)->viewStudent(); 
                         } else {
                             cout << "Invalid selection.\n";
                             system.pressEnterToContinue();
@@ -576,16 +581,16 @@ int main() {
                         break;
                     } 
                 } else if (aChoice == 2) {
-                    auto admins = system.getAdmins();
-                    admins[adminIdx].addRecord(); 
+                    auto& admins = system.getAdmins();
+                    admins.searchNode(adminIdx)->addRecord(); 
                     system.pressEnterToContinue();
                 } else if (aChoice == 3) {
-                    auto admins = system.getAdmins();
-                    admins[adminIdx].editRecord(); 
+                    auto& admins = system.getAdmins();
+                    admins.searchNode(adminIdx)->editRecord(); 
                     system.pressEnterToContinue();
                 } else if (aChoice == 4) {
-                    auto admins = system.getAdmins();
-                    admins[adminIdx].removeRecord(); 
+                    auto& admins = system.getAdmins();
+                    admins.searchNode(adminIdx)->removeRecord(); 
                     system.pressEnterToContinue();
                 } else {
                     cout << "Invalid selection.\n";
