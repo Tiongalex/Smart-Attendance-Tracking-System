@@ -7,3 +7,5 @@ A6731 Admin 120012
 A1946 Admin 99887766
 A24CS0002 Student 12345678
 A24CS0001 Student 098765
+a Student a
+C Student C

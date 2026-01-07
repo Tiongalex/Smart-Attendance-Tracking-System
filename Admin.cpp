@@ -19,36 +19,6 @@ LinkedList<string> split(const string &line) {
 Admin::Admin(string id, string name, string role)
     : User(id, name, role) {}
 
-void appendRecord(const string& filename, const string& record) {
-
-    ifstream in(filename);
-
-    bool addNewline = false;
-
-    if (in) {
-        in.seekg(0, ios::end);
-        long long size = in.tellg();
-
-        if (size > 0) {
-            in.seekg(-1, ios::end);
-            char last;
-            in.get(last);
-
-            if (last != '\n')
-                addNewline = true;
-        }
-    }
-
-    in.close();
-
-    ofstream out(filename, ios::app);
-
-    if (addNewline)
-        out << "\n";
-
-    out << record << "\n";
-}
-
 void Admin::addRecord() {
     cout << "Add Record\n";
     cout << "Select role to add (Admin/Staff/Student): ";

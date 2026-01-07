@@ -3,13 +3,13 @@
         {
             "type": "cppbuild",
             "label": "C/C++: g++.exe build active file",
-            "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
+            "command": "C:\\Users\\clare\\Downloads\\mingw\\MinGW\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
                 "${fileDirname}\\*.cpp",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${fileDirname}\\AttendanceTracker.exe"
             ],
             "options": {
                 "cwd": "${fileDirname}"

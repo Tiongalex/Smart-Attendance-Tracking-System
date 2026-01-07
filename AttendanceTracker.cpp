@@ -4,6 +4,7 @@
 #include "Admin.h"
 #include "Attendance.h"
 #include "LinkedList.h"
+#include "RegistrationQueue.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -350,6 +351,7 @@ void loadLogin() {
 
 int main() {
     AttendanceTracker system;
+    RegistrationQueue regQueue;
 
     while (true) {
         system.clearScreen();
@@ -357,6 +359,7 @@ int main() {
         cout << "1. Admin\n";
         cout << "2. Staff\n";
         cout << "3. Student\n";
+        cout << "4. Register New Student Account\n";
         cout << "0. Exit\n\n";
         cout << "Select option: ";
 
@@ -379,6 +382,7 @@ int main() {
         if (topChoice == 1) role = "Admin";
         else if (topChoice == 2) role = "Staff";
         else if (topChoice == 3) role = "Student";
+        else if (topChoice == 4) role = "New";
         else {
             cout << "Invalid selection. Press Enter to continue.";
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -387,29 +391,46 @@ int main() {
         }
 
         system.clearScreen();
-        cout << "Role: " << role << "\n";
-        cout << "Enter Account ID: ";
-        string inputID;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        getline(cin, inputID);
 
-        cout << "Enter Password: ";
-        string inputPass;
-        getline(cin, inputPass);
+        if(role == "Admin" || role == "Staff" || role == "Student"){
+            cout << "Role: " << role << "\n";
+            cout << "Enter Account ID: ";
+            string inputID;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            getline(cin, inputID);
 
-        bool ok = system.getLogin().login(role, inputID, inputPass);
+            cout << "Enter Password: ";
+            string inputPass;
+            getline(cin, inputPass);
 
-        if (!ok) {
-            system.clearScreen();
-            cout << "Login Failed: account ID or account password not match.\n";
-            cout << "Press Enter to continue...";
-            cin.get();
-            continue; 
+            bool ok = system.getLogin().login(role, inputID, inputPass);
+
+            if (!ok) {
+                system.clearScreen();
+                cout << "Login Failed: account ID or account password not match.\n";
+                cout << "Press Enter to continue...";
+                cin.get();
+                continue; 
+            }
+            system.setuserID(inputID);
         }
-
-        system.setuserID(inputID);
-
-        if (role == "Student") {
+        if (role == "New"){
+            
+            string id, n, pass, course;
+            cout << "--- New Student Registration ---\n";
+            cout << "Enter ID: ";
+            cin >> id;
+            cout << "Enter Name: ";
+            cin >> n;
+            cout << "Enter Password: ";
+            cin.ignore(numeric_limits<streamsize>::max(),'\n');
+            cin >> pass;
+            cout << "Enter Course: ";
+            cin.ignore(numeric_limits<streamsize>::max(),'\n');
+            cin >> course;
+            regQueue.enqueue(id, n, pass, course);
+        }
+        else if (role == "Student") {
             while (true) {
                 system.clearScreen();
                 cout << "--- Student Page ---\n";
@@ -533,6 +554,7 @@ int main() {
                 cout << "2. Add Records\n";
                 cout << "3. Edit Records\n";
                 cout << "4. Remove Records\n";
+                cout << "5. Progress Registration\n";
                 cout << "0. Log Out\n\n";
                 cout << "Select option: ";
 
@@ -592,6 +614,77 @@ int main() {
                     auto& admins = system.getAdmins();
                     admins.searchNode(adminIdx)->removeRecord(); 
                     system.pressEnterToContinue();
+                } else if (aChoice == 5){
+                    system.clearScreen();
+                    if (regQueue.isEmpty()) {
+                        cout << "[Info] No pending registrations.\n";
+                        cout << "\nPress Enter to Continue...";
+                        cin.ignore(numeric_limits<streamsize>::max(),'\n');
+                        cin.get();
+                    } else {
+                        PendingUser req = regQueue.peek();
+                        
+                        cout << "--- Pending Registration Request ---\n";
+                        cout << "Role: " << req.role << endl;
+                        cout << "ID:   " << req.id << endl;
+                        cout << "Name: " << req.name << endl;
+                        cout << "Course:" << req.course << endl;
+                        cout << "------------------------------------\n";
+                        cout << "1. Approve (Add to System)\n";
+                        cout << "2. Reject (Delete Request)\n";
+                        cout << "3. Review Next Request\n";
+                        cout << "4. Monitor Recent Entry\n";
+                        cout << "0. Return\n";
+                        cout << "Selection: ";
+                        
+                        int decision;
+                        cin >> decision;
+                        
+                        if (decision == 1) {
+                            cout<<"PASSWORD: x"<<req.password<<endl;
+                            cout<<"COURSE: "<<req.course<<endl;
+                            appendRecord("login.txt", req.id + " " + req.role + " " + req.password);
+                            system.loadLogin();
+                            Student newStudent(req.id, req.name, "Student", req.course);
+                            system.getStudents().addNode(newStudent);
+                                
+                            appendRecord("student.txt", req.id + " " + req.name + " Student " + req.course);                          
+                            cout << "User Approved and Added to Database.\n";
+                            regQueue.dequeue();
+                        } 
+                        else if (decision == 2) {
+                            cout << "Request Rejected.\n";
+                            regQueue.dequeue();
+                        }
+                        else if (decision == 3) { 
+                            if (!regQueue.isEmpty()) {
+                                PendingUser nextUser = regQueue.getFront();
+                                
+                                cout << "\n--- [Next in Line] ---" << endl;
+                                cout << "Role: " << nextUser.role << endl;
+                                cout << "Name: " << nextUser.name << " (" << nextUser.id << ")" << endl;
+                                cout << "Status: Waiting for Approval" << endl;
+
+                                cout << "Press Enter to Continue...\n";
+                                cin.ignore(numeric_limits<streamsize>::max(),'\n');
+                                cin.get();
+                            }
+                        }
+                        else if (decision == 4) {
+                            if (!regQueue.isEmpty()) {
+                                PendingUser lastUser = regQueue.getRear();
+                                
+                                cout << "\n--- [Most Recent Submission] ---" << endl;
+                                cout << "Role: " << lastUser.role << endl;
+                                cout << "Name: " << lastUser.name << " (" << lastUser.id << ")" << endl;
+                                cout << "Note: This user is at the back of the queue." << endl;
+
+                                cout << "Press Enter to Continue...\n";
+                                cin.ignore(numeric_limits<streamsize>::max(),'\n');
+                                cin.get();
+                            }
+                        }
+                    } 
                 } else {
                     cout << "Invalid selection.\n";
                     system.pressEnterToContinue();
